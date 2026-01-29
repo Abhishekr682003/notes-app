@@ -14,7 +14,7 @@ function App() {
   const fetchNotes = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/');
+      const response = await api.get('');
       setNotes(response.data);
       setError(null);
     } catch (err) {
@@ -32,7 +32,7 @@ function App() {
   // Add note
   const addNote = async (note) => {
     try {
-      const response = await api.post('/', note);
+      const response = await api.post('', note);
       setNotes([response.data, ...notes]);
     } catch (err) {
       setError('Failed to add note.');
