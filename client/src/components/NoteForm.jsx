@@ -45,12 +45,16 @@ const NoteForm = ({ onAdd, currentNote, onUpdate, clearCurrent }) => {
             </h2>
             <input
                 type="text"
+                id="note-title"
+                name="title"
                 placeholder="Note Title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
             />
             <textarea
+                id="note-content"
+                name="content"
                 placeholder="Note Content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}

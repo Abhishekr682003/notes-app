@@ -17,6 +17,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Routes
+app.get('/', (req, res) => {
+    res.json({ message: 'API is running' });
+});
 app.use('/api/notes', require('./routes/noteRoutes'));
 
 // MongoDB Connection
