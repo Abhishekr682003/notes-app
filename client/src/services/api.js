@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api/notes',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/notes',
 });
 
 // Add a response interceptor for global error handling (optional)

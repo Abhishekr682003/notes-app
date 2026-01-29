@@ -9,7 +9,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -20,7 +23,13 @@ app.use('/api/notes', require('./routes/noteRoutes'));
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('MongoDB Connected');
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     })
     .catch(err => console.error(err));
+
+// Export for Vercel
+module.exports = app;
+
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
 
