@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-    origin: '*', // Allow all origins for now to fix deployment issues
+    origin: true, // Reflect request origin
     credentials: true
 }));
 app.use(express.json());
@@ -20,8 +20,13 @@ app.use(express.urlencoded({ extended: false }));
 app.get('/', (req, res) => {
     res.json({ message: 'API is running' });
 });
+
+// Mount routes on both /api and root to handle potential different Vercel rewrite behaviors
 app.use('/api/notes', require('./routes/noteRoutes'));
+app.use('/notes', require('./routes/noteRoutes'));
+
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/auth', require('./routes/authRoutes'));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
