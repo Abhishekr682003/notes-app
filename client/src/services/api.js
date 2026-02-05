@@ -1,10 +1,24 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/notes',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
 });
 
-// Add a response interceptor for global error handling (optional)
+// Add a request interceptor to include the auth token
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Add a response interceptor for global error handling
 api.interceptors.response.use(
     (response) => response,
     (error) => {

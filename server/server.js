@@ -21,6 +21,7 @@ app.get('/', (req, res) => {
     res.json({ message: 'API is running' });
 });
 app.use('/api/notes', require('./routes/noteRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)

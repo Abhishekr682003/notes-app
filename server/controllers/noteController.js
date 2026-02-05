@@ -2,10 +2,10 @@ const Note = require('../models/Note');
 
 // @desc    Get all notes
 // @route   GET /api/notes
-// @access  Public
+// @access  Private
 const getNotes = async (req, res) => {
     try {
-        const notes = await Note.find().sort({ createdAt: -1 });
+        const notes = await Note.find({ user: req.user.id }).sort({ createdAt: -1 });
         res.status(200).json(notes);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -14,7 +14,7 @@ const getNotes = async (req, res) => {
 
 // @desc    Create a new note
 // @route   POST /api/notes
-// @access  Public
+// @access  Private
 const createNote = async (req, res) => {
     try {
         if (!req.body.title || !req.body.content) {
@@ -24,6 +24,7 @@ const createNote = async (req, res) => {
         const note = await Note.create({
             title: req.body.title,
             content: req.body.content,
+            user: req.user.id,
         });
 
         res.status(201).json(note);
@@ -41,6 +42,16 @@ const updateNote = async (req, res) => {
 
         if (!note) {
             return res.status(404).json({ message: 'Note not found' });
+        }
+
+        // Check for user
+        if (!req.user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        // Make sure the logged in user matches the note user
+        if (note.user.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'User not authorized' });
         }
 
         const updatedNote = await Note.findByIdAndUpdate(
@@ -64,6 +75,16 @@ const deleteNote = async (req, res) => {
 
         if (!note) {
             return res.status(404).json({ message: 'Note not found' });
+        }
+
+        // Check for user
+        if (!req.user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        // Make sure the logged in user matches the note user
+        if (note.user.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'User not authorized' });
         }
 
         await note.deleteOne();
