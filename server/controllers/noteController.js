@@ -50,7 +50,7 @@ const updateNote = async (req, res) => {
         }
 
         // Make sure the logged in user matches the note user
-        if (note.user.toString() !== req.user.id) {
+        if (note.user.toString() !== req.user._id.toString()) {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
@@ -83,7 +83,7 @@ const deleteNote = async (req, res) => {
         }
 
         // Make sure the logged in user matches the note user
-        if (note.user.toString() !== req.user.id) {
+        if (note.user.toString() !== req.user._id.toString()) {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
