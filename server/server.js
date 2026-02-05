@@ -5,6 +5,9 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+// Globally disable buffering to debug connection issues
+mongoose.set('bufferCommands', false);
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
