@@ -21,6 +21,25 @@ app.get('/', (req, res) => {
     res.json({ message: 'API is running' });
 });
 
+app.get('/debug', (req, res) => {
+    res.json({
+        message: 'Debug Info',
+        originalUrl: req.originalUrl,
+        baseUrl: req.baseUrl,
+        path: req.path,
+        headers: req.headers
+    });
+});
+app.get('/api/debug', (req, res) => {
+    res.json({
+        message: 'Debug Info (API)',
+        originalUrl: req.originalUrl,
+        baseUrl: req.baseUrl,
+        path: req.path,
+        headers: req.headers
+    });
+});
+
 // Mount routes on both /api and root to handle potential different Vercel rewrite behaviors
 app.use('/api/notes', require('./routes/noteRoutes'));
 app.use('/notes', require('./routes/noteRoutes'));
