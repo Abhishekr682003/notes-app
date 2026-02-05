@@ -21,7 +21,8 @@ const Signup = () => {
             // So redirect to home is better.
             navigate('/');
         } catch (err) {
-            setError(err.response?.data?.message || 'Signup failed');
+            const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Signup failed';
+            setError(errorMsg);
         }
     };
 
