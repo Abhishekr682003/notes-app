@@ -47,12 +47,57 @@ app.use('/notes', require('./routes/noteRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/auth', require('./routes/authRoutes'));
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => {
-        console.log('MongoDB Connected');
-    })
-    .catch(err => console.error(err));
+// MongoDB Connection logic for Serverless
+let cached = global.mongoose;
+
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
+}
+
+const connectDB = async () => {
+    if (cached.conn) {
+        return cached.conn;
+    }
+
+    if (!cached.promise) {
+        const opts = {
+            bufferCommands: false,
+        };
+
+        cached.promise = mongoose.connect(process.env.MONGO_URI, opts).then((mongoose) => {
+            console.log('MongoDB Connected');
+            return mongoose;
+        });
+    }
+
+    try {
+        cached.conn = await cached.promise;
+    } catch (e) {
+        cached.promise = null;
+        throw e;
+    }
+
+    return cached.conn;
+};
+
+// Middleware to ensure DB is connected before handling requests
+app.use(async (req, res, next) => {
+    // Skip DB connection for simple health check if desired, but keeping it simple
+    if (req.path === '/') {
+        return next();
+    }
+
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        console.error('Database connection error:', error);
+        res.status(500).json({
+            message: 'Database connection failed. Please check server logs.',
+            error: error.message
+        });
+    }
+});
 
 // Export for Vercel
 module.exports = app;
