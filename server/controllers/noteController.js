@@ -24,7 +24,7 @@ const createNote = async (req, res) => {
         const note = await Note.create({
             title: req.body.title,
             content: req.body.content,
-            user: req.user.id,
+            user: req.user._id,
         });
 
         res.status(201).json(note);

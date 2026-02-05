@@ -46,8 +46,9 @@ function Home() {
             const response = await api.post('/notes', note);
             setNotes([response.data, ...notes]);
         } catch (err) {
-            setError('Failed to add note.');
-            console.error(err);
+            const errorMsg = err.response?.data?.message || err.message || 'Failed to add note.';
+            setError(errorMsg);
+            console.error('Add note error:', err);
         }
     };
 
