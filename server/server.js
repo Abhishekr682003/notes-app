@@ -40,36 +40,43 @@ app.get('/api/debug', (req, res) => {
     });
 });
 
-// Mount routes on both /api and root to handle potential different Vercel rewrite behaviors
+// Mount routes
 app.use('/api/notes', require('./routes/noteRoutes'));
 app.use('/notes', require('./routes/noteRoutes'));
-
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/auth', require('./routes/authRoutes'));
 
-// MongoDB Connection logic for Serverless
+// MongoDB Connection
 let cached = global.mongoose;
-
 if (!cached) {
     cached = global.mongoose = { conn: null, promise: null };
 }
 
 const connectDB = async () => {
-    // Check if we have a connection AND it's ready (state 1 = connected)
+    // If connected, return connection
     if (cached.conn && mongoose.connection.readyState === 1) {
         return cached.conn;
     }
 
+    // If disconnected (0) or disconnecting (3), reset promise to force new connection
+    if (mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
+        cached.promise = null;
+    }
+
     if (!cached.promise) {
         const opts = {
-            bufferCommands: false,
-            serverSelectionTimeoutMS: 5000, // Fail fast if we can't find a server
+            bufferCommands: false, // Disable buffering to fail fast
+            serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
         };
 
         cached.promise = mongoose.connect(process.env.MONGO_URI, opts).then((mongoose) => {
             console.log('MongoDB Connected');
             return mongoose;
+        }).catch((err) => {
+            console.error('MongoDB Connection Init Error:', err);
+            cached.promise = null; // Reset promise on failure
+            throw err;
         });
     }
 
@@ -83,10 +90,9 @@ const connectDB = async () => {
     return cached.conn;
 };
 
-// Middleware to ensure DB is connected before handling requests
+// Middleware to ensure DB is connected
 app.use(async (req, res, next) => {
-    // Skip DB connection for simple health check if desired, but keeping it simple
-    if (req.path === '/') {
+    if (req.path === '/' || req.path === '/debug' || req.path === '/favicon.ico') {
         return next();
     }
 
@@ -94,15 +100,15 @@ app.use(async (req, res, next) => {
         await connectDB();
         next();
     } catch (error) {
-        console.error('Database connection error:', error);
+        console.error('Database connection middleware error:', error);
         res.status(500).json({
-            message: 'Database connection failed. Please check server logs.',
-            error: error.message
+            message: 'Database connection failed',
+            error: error.message,
+            details: 'Please check server logs for connection timeout details.'
         });
     }
 });
 
-// Export for Vercel
 module.exports = app;
 
 if (require.main === module) {
