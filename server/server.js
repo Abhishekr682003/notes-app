@@ -55,13 +55,16 @@ if (!cached) {
 }
 
 const connectDB = async () => {
-    if (cached.conn) {
+    // Check if we have a connection AND it's ready (state 1 = connected)
+    if (cached.conn && mongoose.connection.readyState === 1) {
         return cached.conn;
     }
 
     if (!cached.promise) {
         const opts = {
             bufferCommands: false,
+            serverSelectionTimeoutMS: 5000, // Fail fast if we can't find a server
+            socketTimeoutMS: 45000,
         };
 
         cached.promise = mongoose.connect(process.env.MONGO_URI, opts).then((mongoose) => {
@@ -105,4 +108,3 @@ module.exports = app;
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
-
