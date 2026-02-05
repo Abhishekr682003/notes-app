@@ -77,6 +77,12 @@ app.use(async (req, res, next) => {
     }
 });
 
+// Final catch-all for debugging 404s
+app.use((req, res) => {
+    console.log(`404: ${req.method} ${req.url}`);
+    res.status(404).json({ message: `Route ${req.method} ${req.url} not found` });
+});
+
 module.exports = app;
 
 if (require.main === module) {

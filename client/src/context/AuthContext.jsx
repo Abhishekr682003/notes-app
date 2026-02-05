@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
                             Authorization: `Bearer ${storedToken}`
                         }
                     };
-                    const { data } = await axios.get('http://localhost:5000/api/auth/me', config);
+                    const { data } = await api.get('/auth/me', config);
                     setUser(data);
                 } catch (error) {
                     console.error("Auth check failed:", error);
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+            const { data } = await api.post('/auth/login', { email, password });
             localStorage.setItem('token', data.token);
             setUser(data.user);
             return data;
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
     const signup = async (username, email, password) => {
         try {
-            const { data } = await axios.post('http://localhost:5000/api/auth/signup', { username, email, password });
+            const { data } = await api.post('/auth/signup', { username, email, password });
             localStorage.setItem('token', data.token);
             setUser(data.user);
             return data;
