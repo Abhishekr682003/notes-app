@@ -5,9 +5,6 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Globally disable buffering to debug connection issues
-mongoose.set('bufferCommands', false);
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -50,70 +47,40 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/auth', require('./routes/authRoutes'));
 
 // MongoDB Connection
-let cached = global.mongoose;
-if (!cached) {
-    cached = global.mongoose = { conn: null, promise: null };
-}
-
 const connectDB = async () => {
-    // If connected, return connection
-    if (cached.conn && mongoose.connection.readyState === 1) {
-        return cached.conn;
-    }
-
-    // If disconnected (0) or disconnecting (3), reset promise to force new connection
-    if (mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
-        cached.promise = null;
-    }
-
-    if (!cached.promise) {
+    try {
         const opts = {
-            bufferCommands: false, // Disable buffering to fail fast
-            serverSelectionTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 15000,
             socketTimeoutMS: 45000,
         };
 
-        cached.promise = mongoose.connect(process.env.MONGO_URI, opts).then((mongoose) => {
-            console.log('MongoDB Connected');
-            return mongoose;
-        }).catch((err) => {
-            console.error('MongoDB Connection Init Error:', err);
-            cached.promise = null; // Reset promise on failure
-            throw err;
-        });
+        const conn = await mongoose.connect(process.env.MONGO_URI, opts);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+        return conn;
+    } catch (err) {
+        console.error(`MongoDB Connection Error: ${err.message}`);
+        process.exit(1);
     }
-
-    try {
-        cached.conn = await cached.promise;
-    } catch (e) {
-        cached.promise = null;
-        throw e;
-    }
-
-    return cached.conn;
 };
 
-// Middleware to ensure DB is connected
+// Middleware to ensure DB is connected (redundant if we connect before starting, but kept for safety)
 app.use(async (req, res, next) => {
-    if (req.path === '/' || req.path === '/debug' || req.path === '/favicon.ico') {
-        return next();
-    }
-
-    try {
-        await connectDB();
+    if (mongoose.connection.readyState !== 1 && !['/', '/debug', '/favicon.ico'].includes(req.path)) {
+        try {
+            await connectDB();
+            next();
+        } catch (error) {
+            res.status(500).json({ message: 'Database connection failed' });
+        }
+    } else {
         next();
-    } catch (error) {
-        console.error('Database connection middleware error:', error);
-        res.status(500).json({
-            message: 'Database connection failed',
-            error: error.message,
-            details: 'Please check server logs for connection timeout details.'
-        });
     }
 });
 
 module.exports = app;
 
 if (require.main === module) {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    connectDB().then(() => {
+        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    });
 }

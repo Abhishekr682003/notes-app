@@ -31,20 +31,27 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (email, password) => {
-        const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
-        localStorage.setItem('token', data.token);
-        setUser(data.user);
-        return data;
+        try {
+            const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+            localStorage.setItem('token', data.token);
+            setUser(data.user);
+            return data;
+        } catch (error) {
+            console.error("Login failed:", error.response?.data || error.message);
+            throw error;
+        }
     };
 
     const signup = async (username, email, password) => {
-        const { data } = await axios.post('http://localhost:5000/api/auth/signup', { username, email, password });
-        localStorage.setItem('token', data.token);
-        // The signup response implies the user is logged in, but data structure might differ slightly? 
-        // My controller returns { _id, username, email, token } which is compatible.
-        // Wait, controller returns explicit object.
-        setUser({ id: data._id, username: data.username, email: data.email });
-        return data;
+        try {
+            const { data } = await axios.post('http://localhost:5000/api/auth/signup', { username, email, password });
+            localStorage.setItem('token', data.token);
+            setUser(data.user);
+            return data;
+        } catch (error) {
+            console.error("Signup failed:", error.response?.data || error.message);
+            throw error;
+        }
     };
 
     const logout = () => {

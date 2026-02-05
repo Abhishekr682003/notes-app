@@ -17,8 +17,7 @@ const userSchema = mongoose.Schema({
         required: true
     },
 }, {
-    timestamps: true,
-    bufferCommands: false // Disable buffering to reveal connection errors immediately
+    timestamps: true
 });
 
 // Encrypt password using bcrypt
